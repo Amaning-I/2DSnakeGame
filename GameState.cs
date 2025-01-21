@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Clone
 {
@@ -22,7 +20,13 @@ namespace Clone
 
         private readonly LinkedList<Direction> dirChanges = new LinkedList<Direction>();
         private readonly LinkedList<Position> snakePositions = new LinkedList<Position>();
-        private readonly Random random = new Random(); // used for where the food should be spawned randomly
+        private readonly Random random = new Random();
+
+        // Enum to represent different food types
+        public enum FoodType { Regular, Special, Rare }
+        public FoodType CurrentFoodType { get; private set; } = FoodType.Regular;
+
+
 
         public GameState(int rows, int cols)
         {
@@ -33,6 +37,11 @@ namespace Clone
 
             AddSnake();
             AddFood();
+
+            // Spawn monsters
+            AddMonsters(GridValue.Monster, 4); // 3 generic monsters
+            AddMonsters(GridValue.Dragonfly, 4); // 3 vampires
+            AddMonsters(GridValue.Knight, 4); // 4 knights
         }
 
         private void AddSnake()
@@ -41,12 +50,11 @@ namespace Clone
 
             for (int c = 1; c <= 3; c++)
             {
-                Grid[r, c] = GridValue.Snake; // Correctly placing snake
+                Grid[r, c] = GridValue.Snake;
                 snakePositions.AddFirst(new Position(r, c));
             }
         }
 
-        // Check for all the positions in the grid that are not occupied by the snake
         private IEnumerable<Position> EmptyPositions()
         {
             for (int r = 0; r < Rows; r++)
@@ -63,16 +71,67 @@ namespace Clone
 
         private void AddFood()
         {
+            UpdateFoodType();
+
             List<Position> empty = new List<Position>(EmptyPositions());
-
-            if (empty.Count == 0) // If there are no empty positions
+            if (empty.Count == 0)
             {
-                return; // We simply return
+                return;
             }
-            Position pos = empty[random.Next(empty.Count)];
-            Grid[pos.Row, pos.Column] = GridValue.Food;
 
-            // Mistake over here
+            Position pos = empty[random.Next(empty.Count)];
+            switch (CurrentFoodType)
+            {
+                case FoodType.Regular:
+                    Grid[pos.Row, pos.Column] = GridValue.Food;
+                    break;
+                case FoodType.Special:
+                    Grid[pos.Row, pos.Column] = GridValue.SpecialFood;
+                    break;
+                case FoodType.Rare:
+                    Grid[pos.Row, pos.Column] = GridValue.RareFood;
+                    break;
+            }
+        }
+
+        private void UpdateFoodType()
+        {
+            FoodType previousType = CurrentFoodType;
+            if (Score >= 5)
+            {
+                CurrentFoodType = FoodType.Rare;
+            }
+            else if (Score >= 3)
+            {
+                CurrentFoodType = FoodType.Special;
+            }
+            else if (Score >= 1)
+            {
+                CurrentFoodType = FoodType.Regular;
+            }
+
+            if (previousType != CurrentFoodType)
+            {
+                Console.WriteLine($"Food type changed from {previousType} to {CurrentFoodType}.");
+            }
+        }
+
+        private void AddMonsters(GridValue monsterType, int count)
+        {
+            List<Position> emptyPositions = new List<Position>(EmptyPositions());
+
+            for (int i = 0; i < count; i++)
+            {
+                if (emptyPositions.Count == 0)
+                {
+                    break;
+                }
+
+                Position pos = emptyPositions[random.Next(emptyPositions.Count)];
+                emptyPositions.Remove(pos);
+
+                Grid[pos.Row, pos.Column] = monsterType;
+            }
         }
 
         public Position HeadPosition()
@@ -85,7 +144,6 @@ namespace Clone
             return snakePositions.Last.Value;
         }
 
-        // Return snake position as an iEnumerable
         public IEnumerable<Position> SnakePositions()
         {
             return snakePositions;
@@ -97,7 +155,6 @@ namespace Clone
             Grid[pos.Row, pos.Column] = GridValue.Snake;
         }
 
-        // Remove the tail of the snake when size increases
         private void RemoveTail()
         {
             Position tail = snakePositions.Last.Value;
@@ -107,12 +164,7 @@ namespace Clone
 
         private Direction GetLastDirection()
         {
-            if (dirChanges.Count == 0)
-            {
-                return Dir;
-            }
-            return dirChanges.Last.Value;
-
+            return dirChanges.Count == 0 ? Dir : dirChanges.Last.Value;
         }
 
         private bool CanChangeDirection(Direction newDir)
@@ -121,28 +173,24 @@ namespace Clone
             {
                 return false;
             }
+
             Direction lastDir = GetLastDirection();
             return newDir != lastDir && newDir != lastDir.Opposite();
         }
 
-
-        // Method to change the snake direction 
         public void ChangeDirection(Direction dir)
         {
             if (CanChangeDirection(dir))
             {
                 dirChanges.AddLast(dir);
-            }   
+            }
         }
-
-      
 
         private bool OutsideGrid(Position pos)
         {
             return pos.Row < 0 || pos.Row >= Rows || pos.Column < 0 || pos.Column >= Cols;
         }
 
-        // Position as parameter and returns what the snake will hit if it moves there
         private GridValue WillHit(Position newHeadPos)
         {
             if (OutsideGrid(newHeadPos))
@@ -173,12 +221,27 @@ namespace Clone
             {
                 GameOver = true;
             }
+            else if (hit == GridValue.Monster)
+            {
+                Console.WriteLine("You died to a Monster!");
+                GameOver = true;
+            }
+            else if (hit == GridValue.Dragonfly)
+            {
+                Console.WriteLine("You got wrecked by a Vampire!");
+                GameOver = true;
+            }
+            else if (hit == GridValue.Knight)
+            {
+                Console.WriteLine("You were slain by a Knight!");
+                GameOver = true;
+            }
             else if (hit == GridValue.Empty)
             {
                 RemoveTail();
                 AddHead(newHeadPos);
             }
-            else if (hit == GridValue.Food)
+            else if (hit == GridValue.Food || hit == GridValue.SpecialFood || hit == GridValue.RareFood)
             {
                 AddHead(newHeadPos);
                 Score++;
@@ -187,3 +250,4 @@ namespace Clone
         }
     }
 }
+

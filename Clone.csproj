@@ -9,25 +9,39 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\Alligator.png" />
+    <None Remove="Assets\apple.png" />
+    <None Remove="Assets\banana.png" />
     <None Remove="Assets\Body.png" />
+    <None Remove="Assets\cherry .png" />
+    <None Remove="Assets\cherry1.png" />
     <None Remove="Assets\DeadBody.png" />
     <None Remove="Assets\DeadHead.png" />
     <None Remove="Assets\DroidSansMono.ttf" />
     <None Remove="Assets\Empty.png" />
-    <None Remove="Assets\Food.png" />
     <None Remove="Assets\Head.png" />
     <None Remove="Assets\icon.ico" />
+    <None Remove="Assets\knight.png" />
+    <None Remove="Assets\pineapple.png" />
+    <None Remove="Assets\vampire.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\Alligator.png" />
+    <Resource Include="Assets\apple.png" />
+    <Resource Include="Assets\banana.png" />
     <Resource Include="Assets\Body.png" />
+    <Resource Include="Assets\cherry .png" />
+    <Resource Include="Assets\cherry1.png" />
     <Resource Include="Assets\DeadBody.png" />
     <Resource Include="Assets\DeadHead.png" />
     <Resource Include="Assets\DroidSansMono.ttf" />
     <Resource Include="Assets\Empty.png" />
-    <Resource Include="Assets\Food.png" />
     <Resource Include="Assets\Head.png" />
     <Resource Include="Assets\icon.ico" />
+    <Resource Include="Assets\knight.png" />
+    <Resource Include="Assets\pineapple.png" />
+    <Resource Include="Assets\vampire.png" />
   </ItemGroup>
 
 </Project>

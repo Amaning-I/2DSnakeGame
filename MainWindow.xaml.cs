@@ -11,19 +11,24 @@ namespace Clone
     public partial class MainWindow : Window
     {
         private readonly Dictionary<GridValue, ImageSource> gridValToImage = new()
-        {
-            { GridValue.Empty, Images.Empty },
-            { GridValue.Snake, Images.Body },
-            { GridValue.Food, Images.Food },
-            // {GridValue.Enemies, Images.Enemies }
+{
+        { GridValue.Empty, Images.Empty },
+        { GridValue.Snake, Images.Body },
+        { GridValue.Food, Images.Food },
+        { GridValue.Monster, Images.Alligator },
+        { GridValue.Dragonfly, Images.Dragonfly }, // Add Vampire here
+        {GridValue.Knight, Images.Knight },        // Add Knight
+        { GridValue.SpecialFood, Images.SpecialFood },
+        { GridValue.RareFood, Images.RareFood },
         };
+
 
         private readonly Dictionary<Direction, int> dirToRotation = new()
         {
             { Direction.Up, 0 },
-            {Direction.Right, 90 },
-            {Direction.Down, 180 },
-            {Direction.Left, 270 },
+            { Direction.Right, 90 },
+            { Direction.Down, 180 },
+            { Direction.Left, 270 },
         };
 
         private readonly int rows = 25, cols = 25;
@@ -35,7 +40,7 @@ namespace Clone
         {
             InitializeComponent();
             gridImages = SetUpGrid();
-            gameState = new GameState(rows, cols); // Ensure GameState is initialized properly
+            gameState = new GameState(rows, cols); 
         }
 
         private async Task RunGame()
@@ -47,6 +52,7 @@ namespace Clone
             await ShowGameOver();
             gameState = new GameState(rows, cols);
         }
+
         private async void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (Overlay.Visibility == Visibility.Visible)
@@ -130,7 +136,6 @@ namespace Clone
             ScoreText.Text = $"SCORE: {gameState.Score}"; // Update score
         }
 
-
         private void DrawGrid()
         {
             for (int r = 0; r < rows; r++)
@@ -165,9 +170,7 @@ namespace Clone
                 gridImages[pos.Row, pos.Column].Source = source;
                 await Task.Delay(50);
             }
-
         }
-
 
         private async Task ShowCountDown()
         {
@@ -185,6 +188,5 @@ namespace Clone
             Overlay.Visibility = Visibility.Visible;
             OverlayText.Text = "Press ANY KEY TO START";
         }
-
     }
 }

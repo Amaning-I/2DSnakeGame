@@ -11,9 +11,11 @@ namespace Clone
         Empty,
         Snake,
         Food,
+        SpecialFood,
+        RareFood,
         Outside,
-        Enemies //Enemies/Trap
+        Monster, 
+        Dragonfly,
+        Knight
     }
 }
-
-
