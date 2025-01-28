@@ -14,7 +14,7 @@ namespace Clone
         public readonly static Direction Down = new Direction(1, 0);
         private object HashCode;
 
-        public int Rowoffset { get; }
+        public int Rowoffset { get;  }
         public int Columnoffset { get; }
 
         private Direction(int rowoffset, int columnoffset)

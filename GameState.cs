@@ -18,6 +18,17 @@ namespace Clone
         public int Score { get; private set; }
         public bool GameOver { get; private set; }
 
+        private bool IsSpedUp { get; set; } = false; // Tracks whether the snake is sped up --> default is false
+        public bool IsGodMode { get; set; } = false; // Tracks if god mode is active 
+
+        public void ToggleGodMode()
+        {
+            IsGodMode = !IsGodMode;
+        }
+        public bool IsDashing { get; private set; }
+        private int dashRemainingSteps;
+        private int growthPending;
+
         private readonly LinkedList<Direction> dirChanges = new LinkedList<Direction>();
         private readonly LinkedList<Position> snakePositions = new LinkedList<Position>();
         private readonly Random random = new Random();
@@ -39,8 +50,8 @@ namespace Clone
             AddFood();
 
             // Spawn monsters
-            AddMonsters(GridValue.Monster, 4); // 3 generic monsters
-            AddMonsters(GridValue.Dragonfly, 4); // 3 vampires
+            AddMonsters(GridValue.Monster, 4); // 4 generic monsters
+            AddMonsters(GridValue.Dragonfly, 4); // 4 vampires
             AddMonsters(GridValue.Knight, 4); // 4 knights
         }
 
@@ -128,7 +139,7 @@ namespace Clone
                 }
 
                 Position pos = emptyPositions[random.Next(emptyPositions.Count)];
-                emptyPositions.Remove(pos);
+                emptyPositions.Remove(pos); // Avoid playing multiple monsters in the same spot
 
                 Grid[pos.Row, pos.Column] = monsterType;
             }
@@ -214,40 +225,122 @@ namespace Clone
                 dirChanges.RemoveFirst();
             }
 
-            Position newHeadPos = HeadPosition().Translate(Dir);
-            GridValue hit = WillHit(newHeadPos);
+            int steps = IsDashing ? 2 : 1; // Dash moves 2 steps at once
+            bool hitSomething = false;
 
-            if (hit == GridValue.Outside || hit == GridValue.Snake)
+            for (int i = 0; i < steps && !hitSomething; i++)
             {
-                GameOver = true;
+                Position newHeadPos = HeadPosition().Translate(Dir);
+                GridValue hit = WillHit(newHeadPos);
+
+                if (hit == GridValue.Outside || (!IsGodMode && hit == GridValue.Snake))
+                {
+                    GameOver = true;
+                    return;
+                }
+                else if (IsEnemy(hit) && !IsGodMode && !IsDashing)
+                {
+                    HandleEnemyCollision(hit);
+                    GameOver = true;
+                    return;
+                }
+                else if (IsEnemy(hit) && (IsGodMode || IsDashing))
+                {
+                    HandleEnemyKill(newHeadPos, hit);
+                }
+                else if (hit == GridValue.Empty || IsEnemy(hit))
+                {
+                    RegularMovement(newHeadPos);
+                }
+                else if (IsFood(hit))
+                {
+                    HandleFoodConsumption(newHeadPos);
+                }
+
+                hitSomething = hit != GridValue.Empty && !IsFood(hit);
             }
-            else if (hit == GridValue.Monster)
+
+            if (IsDashing)
             {
-                Console.WriteLine("You died to a Monster!");
-                GameOver = true;
-            }
-            else if (hit == GridValue.Dragonfly)
-            {
-                Console.WriteLine("You got wrecked by a Vampire!");
-                GameOver = true;
-            }
-            else if (hit == GridValue.Knight)
-            {
-                Console.WriteLine("You were slain by a Knight!");
-                GameOver = true;
-            }
-            else if (hit == GridValue.Empty)
-            {
-                RemoveTail();
-                AddHead(newHeadPos);
-            }
-            else if (hit == GridValue.Food || hit == GridValue.SpecialFood || hit == GridValue.RareFood)
-            {
-                AddHead(newHeadPos);
-                Score++;
-                AddFood();
+                dashRemainingSteps--;
+                if (dashRemainingSteps <= 0)
+                {
+                    IsDashing = false;
+                }
             }
         }
+
+        private void HandleEnemyCollision(GridValue hit)
+        {
+            Console.WriteLine($"Game Over! Collided with {hit}.");
+            GameOver = true; // Ends the game
+        }
+
+        // NEW: Helper methods
+        private bool IsEnemy(GridValue value) =>
+            value == GridValue.Monster || value == GridValue.Dragonfly || value == GridValue.Knight;
+
+        private bool IsFood(GridValue value) =>
+            value == GridValue.Food || value == GridValue.SpecialFood || value == GridValue.RareFood;
+
+        private void HandleEnemyKill(Position position, GridValue enemyType)
+        {
+            Console.WriteLine($"Destroyed {enemyType}!");
+            Grid[position.Row, position.Column] = GridValue.Empty;
+            AddEnemy(enemyType); // Respawn enemy
+            AddHead(position);
+            Score += (int)enemyType; // Assign score values to enum if needed
+        }
+
+        private void HandleFoodConsumption(Position newHeadPos)
+        {
+            AddHead(newHeadPos);
+            Score++;
+            growthPending += IsSpedUp ? 2 : 1; // Grow more when sped up
+            AddFood();
+        }
+
+        private void RegularMovement(Position newHeadPos)
+        {
+            if (growthPending > 0)
+            {
+                growthPending--;
+            }
+            else
+            {
+                RemoveTail();
+            }
+            AddHead(newHeadPos);
+        }
+
+        // NEW: Speed and dash controls
+        public void ToggleSpeed()
+        {
+            IsSpedUp = !IsSpedUp;
+            growthPending += IsSpedUp ? 1 : 0; // Immediate growth when speeding up
+        }
+
+        public void ActivateDash()
+        {
+            if (!IsDashing)
+            {
+                IsDashing = true;
+                dashRemainingSteps = 5; // Dash lasts 5 moves
+            }
+        }
+
+        // Modified AddEnemy for respawning
+        private void AddEnemy(GridValue enemyType)
+        {
+            List<Position> empty = new List<Position>(EmptyPositions());
+            if (empty.Count == 0) return;
+
+            Position pos = empty[random.Next(empty.Count)];
+            Grid[pos.Row, pos.Column] = enemyType;
+        }
+
+        // ... (rest of existing methods)
     }
 }
+
 

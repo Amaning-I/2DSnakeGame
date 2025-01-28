@@ -90,6 +90,17 @@ namespace Clone
                 case Key.Down:
                     gameState.ChangeDirection(Direction.Down);
                     break;
+                // NEW: Add dash (e.g., Spacebar)
+                case Key.Space:
+                    gameState.ActivateDash();
+                    break;
+
+                // NEW: Toggle god mode (e.g., 'G' key)
+                case Key.G:
+                    gameState.ToggleGodMode();
+                    UpdateGodModeIndicator(); // Provide UI feedback
+                    break;
+
             }
         }
 
@@ -105,6 +116,16 @@ namespace Clone
             // Display Game Over screen or message
            MessageBox.Show("Game Over! Final Score: " + gameState.Score, "Snake Game");
         }
+
+       
+
+
+
+
+
+
+
+
 
         private Image[,] SetUpGrid()
         {
@@ -128,13 +149,27 @@ namespace Clone
             }
             return images;
         }
-
+         // hello wosdsafsadfdsfsafdsafdsfsdfsdfsdfsdf dsfdsfd       new code here 
         private void Draw()
         {
             DrawGrid(); // Draw the updated game grid
             DrawSnakeHead();
             ScoreText.Text = $"SCORE: {gameState.Score}"; // Update score
         }
+        private void UpdateGodModeIndicator()
+        {
+            if (gameState.IsGodMode)
+            {
+                ScoreText.Foreground = new SolidColorBrush(Colors.Gold); // Set text color to gold
+                ScoreText.Text = "GOD MODE ENABLED";
+            }
+            else
+            {
+                ScoreText.Foreground = new SolidColorBrush(Colors.White); // Reset to default color
+                ScoreText.Text = $"SCORE: {gameState.Score}";
+            }
+        }
+
 
         private void DrawGrid()
         {
